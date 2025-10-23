@@ -49,22 +49,22 @@ int main() {
         TOGGLELED(LED5_PORT);
         
         //LED4 handling
-        if (count % 2 == 0) {
+        if (!(count & 1)) {
             TOGGLELED(LED4_PORT);
         } 
         
         //LED3 handling
-        if (count % 4 == 0) {
+        if (!(count & 3)) {
             TOGGLELED(LED3_PORT);
         } 
         
         //LED2 handling
-        if (count % 8 == 0) {
+        if (!(count & 7)) {
             TOGGLELED(LED2_PORT);
         } 
         
         //LED1 handling
-        if (count % 16 == 0) {
+        if (!(count & 15)) {
             TOGGLELED(LED1_PORT);
         } 
         
