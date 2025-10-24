@@ -15,62 +15,66 @@
 // Watchdog Timer Enable = Watchdog Timer enabled/disabled by user software
 // (LPRC can be disabled by clearing the SWDTEN bit in the RCON register)
 #pragma config FWDTEN = OFF
+
 int main() {
-    // Initialize
+    //Init LCD and LEDs
     lcd_initialize();
     led_init();
+	
+    // Clear the Screen and reset the cursor
     lcd_clear();
-
-    gotoLine(1);
-    lcd_printf("Aditya kotte");
-    gotoLine(2);
-    lcd_printf("Samuele Ribaudo");
-    gotoLine(3);
-    lcd_printf("Yan Jun Hong");
+    lcd_locate(0, 0);
     
-
-    // Set LED pins as outputs
-    CLEARLED(LED1_TRIS);
-    CLEARLED(LED2_TRIS);
-    CLEARLED(LED3_TRIS);
-    CLEARLED(LED4_TRIS);
-    CLEARLED(LED5_TRIS);
-
-    uint8_t count = 0;
-
-    while (count < 128) {
-        // Display number on LCD
-        gotoLine(5);  // safer than 8
-        lcd_clear_row(4);
-        lcd_printf("Count: %d", count);
-
-        // Set LEDs according to binary value of count
-        // LED1 (bit 4)
-        if (count & (1 << 4)) SETLED(LED1_PORT);
-        else CLEARLED(LED1_PORT);
-
-        // LED2 (bit 3)
-        if (count & (1 << 3)) SETLED(LED2_PORT);
-        else CLEARLED(LED2_PORT);
-
-        // LED3 (bit 2)
-        if (count & (1 << 2)) SETLED(LED3_PORT);
-        else CLEARLED(LED3_PORT);
-
-        // LED4 (bit 1)
-        if (count & (1 << 1)) SETLED(LED4_PORT);
-        else CLEARLED(LED4_PORT);
-
-        // LED5 (bit 0)
-        if (count & (1 << 0)) SETLED(LED5_PORT);
-        else CLEARLED(LED5_PORT);
-
+    // Print Name
+    lcd_printf("Group Members:\r");
+    lcd_printf("* Samuele Ribaudo\r");
+    lcd_printf("* Hong Yan Jun\r");
+    lcd_printf("* Aditya Kotte\r");
+    lcd_locate(0, 7);
+    printf("Counter = 0");
+    
+    
+    //Declare count and turn it into LED
+    uint8_t count = 1;
+    while (count <= 128) {
+        
+        //half a second delay
+        __delay_ms(500);
+        
+        //print counter value
+        lcd_locate(10, 7);
+        printf("%d", count);
+        
+        //LED5 handling
+        TOGGLELED(LED5_PORT);
+        
+        //LED4 handling
+        if (!(count & 1)) {
+            TOGGLELED(LED4_PORT);
+        } 
+        
+        //LED3 handling
+        if (!(count & 3)) {
+            TOGGLELED(LED3_PORT);
+        } 
+        
+        //LED2 handling
+        if (!(count & 7)) {
+            TOGGLELED(LED2_PORT);
+        } 
+        
+        //LED1 handling
+        if (!(count & 15)) {
+            TOGGLELED(LED1_PORT);
+        } 
+        
+        //increment counter value
         count++;
-        __delay_ms(500);  // 0,5 second delay
     }
-
-    while (1) {
-    }
+    
+    // Stop
+    while(1)
+        ;
 }
 
 
