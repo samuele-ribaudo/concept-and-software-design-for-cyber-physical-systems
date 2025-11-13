@@ -88,15 +88,74 @@ void timer_initialize()
  * main loop
  */
 
+uint16_t volt_to_dac_12bit_value(float vout){
+    // page 22 MCP4822-datasheet.pdf
+    uint16_t dac_value = 0; // we are usign channel A (bit 15 == 0);
+    float vref = 2.048; // reference voltage in volts page 4 MCP4822-datasheet.pdf
+    
+    if(vout > 2*vref) vout = 2*vref; // max value we can represent
+    if(vout < 0) vout = 0; // vout should be positive
+    
+    if(vout <= vref){
+        // gain = 1
+        dac_value = (uit16_t) ((1 << 12) * vout/vref) | (1 << 13)
+    }else{
+        // gain = 2
+        dac_value = (uint16_t)((1 << 12)* vout/(vref*2)) | (0 << 13)
+    }
+    return dac_value;
+}
+
 void main_loop()
 {
     // print assignment information
     lcd_printf("Lab03: DAC");
     lcd_locate(0, 1);
     lcd_printf("Group: 8");
+
+    uint16_t dac_value;
+
+    float vout;
+    int ms;
+    int cycle_count = 0;
     
+    dac_initialize();
     while(TRUE)
     {
         // main loop code
+        switch(cycle_count % 3){
+            case 0:
+                vout = 1.0;
+                ms = 500;
+                cycle_count++;
+            break;
+            case 1:
+                vout = 2.5;
+                ms = 2000;
+                cycle_count++;
+            break;
+            default;
+                vout = 3.5;
+                ms = 1000;
+                cycle_count = 0;
+        }
+
+        dac_value = volt_to_dac_12bit_value(vout); //retrieve the register value
+        
+        DAC_CS_PORT = 0; // begin serial transmission;
+        for(int i = 15; i >= 0; i--){
+            // serially upload register value
+            DAC_SDI_PORT = (dac_value >> i) & 1; // take the i bit value
+            DAC_SCK_PORT = 1; // rise the clock
+            Nop();
+            DAC_SCK_PORT = 0;
+            Nop();
+        }
+        DAC_CS_PORT = 1; // end transmission
+        DAC_LDAC_PORT = 0; // transfer the register value from LDAC to DAC
+        Nop();
+        DAC_LDAC_PORT = 1;
+
+        // delay(ms); to be implemented with timers
     }
 }
