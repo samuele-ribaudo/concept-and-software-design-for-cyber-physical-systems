@@ -98,10 +98,10 @@ uint16_t volt_to_dac_12bit_value(float vout){
     
     if(vout <= vref){
         // gain = 1
-        dac_value = (uit16_t) ((1 << 12) * vout/vref) | (1 << 13)
+        dac_value = (uit16_t) ((1 << 12) * vout/vref) | (1 << 13) // basically the formula at page 22 of MCP4822-datasheet.pdf + bit 13 value
     }else{
         // gain = 2
-        dac_value = (uint16_t)((1 << 12)* vout/(vref*2)) | (0 << 13)
+        dac_value = (uint16_t) ((1 << 12)* vout/(vref*2)) | (0 << 13)
     }
     return dac_value;
 }
@@ -122,8 +122,10 @@ void main_loop()
     dac_initialize();
     while(TRUE)
     {
+        // still need to toggle LED1
+
         // main loop code
-        switch(cycle_count % 3){
+        switch(cycle_count % 3){ // just to avoid writing 3 thimes the same code
             case 0:
                 vout = 1.0;
                 ms = 500;
