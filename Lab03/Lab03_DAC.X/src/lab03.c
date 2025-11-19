@@ -65,6 +65,7 @@ void dac_send(uint16_t dac_value)
     for(i = 15; i >= 0; i--){
         // serially upload register value
         DAC_SDI_PORT = (dac_value >> i) & 1; // take the i bit value
+        Nop();
         DAC_SCK_PORT = 1; // rise the clock
         Nop();
         DAC_SCK_PORT = 0;
