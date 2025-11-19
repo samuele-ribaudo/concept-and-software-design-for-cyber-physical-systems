@@ -31,6 +31,8 @@
 #define DAC_SCK_AD2CFG AD2PCFGLbits.PCFG11
 #define DAC_LDAC_AD2CFG AD2PCFGLbits.PCFG13
 
+volatile unsigned int ms_counter = 0;
+
 void dac_initialize()
 {
     // set AN10, AN11 AN13 to digital mode
@@ -79,10 +81,33 @@ void timer_initialize()
     // lower 8 bits of the register OSCCON)
     __builtin_write_OSCCONL(OSCCONL | 2);
     // configure timer
+    T1CONbits.TON = 0;
+    T1CONbits.TCS = 0;
+    T1CONbits.TCKPS = 0b10;
     
+    TMR1 = 0;
+    PR1 = 199;
+    
+    IPC0bits.T1IP = 1;
+    IFS0bits.T1IF = 0;
+    TEC0bits.T1IE = 1;
+    
+    T1CONbits.TON = 1;
 }
 
 // interrupt service routine?
+void __attribute__((__interrupt__, __auto_psv__)) _T1Interrupt(void)
+{
+    ms_counter++;        // add 1 ms
+    IFS0bits.T1IF = 0;   // clear interrupt flag
+}
+
+//delay function
+void delay_ms(unsigned int duration)
+{
+    ms_counter = 0;  // reset counter
+    while(ms_counter < duration); // wait
+}
 
 /*
  * main loop
@@ -158,6 +183,6 @@ void main_loop()
         Nop();
         DAC_LDAC_PORT = 1;
 
-        // delay(ms); to be implemented with timers
+        delay_ms(ms); // to be implemented with timers
     }
 }
