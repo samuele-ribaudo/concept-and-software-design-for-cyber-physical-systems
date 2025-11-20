@@ -55,6 +55,48 @@ void dac_initialize()
     DAC_SDI_PORT = 0; // don't care
     DAC_SCK_PORT = 0; // clock set on rising edge (startitng position is 0)
     DAC_LDAC_PORT = 1; // to avoid data transfer to DAC
+
+}
+
+void dac_send(uint16_t dac_value)
+{
+    DAC_CS_PORT = 0; // begin serial transmission;
+    int i;
+    for(i = 15; i >= 0; i--){
+        // serially upload register value
+        DAC_SDI_PORT = (dac_value >> i) & 1; // take the i bit value
+        Nop();
+        DAC_SCK_PORT = 1; // rise the clock
+        Nop();
+        DAC_SCK_PORT = 0;
+        Nop();
+    }
+    DAC_CS_PORT = 1; // end transmission
+    DAC_LDAC_PORT = 0; // transfer the register value from LDAC to DAC
+    Nop();
+    DAC_LDAC_PORT = 1;
+}
+
+void dac_set_voltage(float vout)
+{
+    // page 22 MCP4822-datasheet.pdf
+    uint16_t dac_value = 0; // we are usign channel A (bit 15 == 0);
+    float vref = 2.048; // reference voltage in volts page 4 MCP4822-datasheet.pdf
+    
+    if(vout > 2*vref) vout = 2*vref; // max value we can represent
+    if(vout < 0) vout = 0; // vout should be positive
+    
+    if(vout <= vref){
+        // gain = 1
+        dac_value = (uint16_t) ((1 << 12) * vout/vref) | (1 << 13); // basically the formula at page 22 of MCP4822-datasheet.pdf + bit 13 value
+    }else{
+        // gain = 2
+        dac_value = (uint16_t) ((1 << 12)* vout/(vref*2)) | (0 << 13);
+    }
+    
+    dac_value |= (1 << 12);
+
+    dac_send(dac_value);
 }
 
 /*
@@ -68,6 +110,8 @@ void dac_initialize()
 #define TCKPS_64  0x02
 #define TCKPS_256 0x03
 
+volatile unsigned int ms_counter = 0;
+
 void timer_initialize()
 {
     // Enable RTC Oscillator -> this effectively does OSCCONbits.LPOSCEN = 1
@@ -79,85 +123,58 @@ void timer_initialize()
     // lower 8 bits of the register OSCCON)
     __builtin_write_OSCCONL(OSCCONL | 2);
     // configure timer
+    T1CONbits.TON = 0;
+    T1CONbits.TCS = 0;
+    T1CONbits.TCKPS = 0b10;
     
+    TMR1 = 0;
+    PR1 = 199;
+    
+    IPC0bits.T1IP = 1;
+    IFS0bits.T1IF = 0;
+    IEC0bits.T1IE = 1;
+    
+    T1CONbits.TON = 1;
 }
 
 // interrupt service routine?
+void __attribute__((__interrupt__, __auto_psv__)) _T1Interrupt(void)
+{
+    ms_counter++;        // add 1 ms
+    IFS0bits.T1IF = 0;   // clear interrupt flag
+}
+
+//delay function
+void delay_ms(unsigned int duration)
+{
+    ms_counter = 0;  // reset counter
+    while(ms_counter < duration); // wait
+}
+
 
 /*
  * main loop
  */
-
-uint16_t volt_to_dac_12bit_value(float vout){
-    // page 22 MCP4822-datasheet.pdf
-    uint16_t dac_value = 0; // we are usign channel A (bit 15 == 0);
-    float vref = 2.048; // reference voltage in volts page 4 MCP4822-datasheet.pdf
-    
-    if(vout > 2*vref) vout = 2*vref; // max value we can represent
-    if(vout < 0) vout = 0; // vout should be positive
-    
-    if(vout <= vref){
-        // gain = 1
-        dac_value = (uit16_t) ((1 << 12) * vout/vref) | (1 << 13) // basically the formula at page 22 of MCP4822-datasheet.pdf + bit 13 value
-    }else{
-        // gain = 2
-        dac_value = (uint16_t) ((1 << 12)* vout/(vref*2)) | (0 << 13)
-    }
-    return dac_value;
-}
 
 void main_loop()
 {
     // print assignment information
     lcd_printf("Lab03: DAC");
     lcd_locate(0, 1);
-    lcd_printf("Group: 8");
-
-    uint16_t dac_value;
-
-    float vout;
-    int ms;
-    int cycle_count = 0;
+    lcd_printf("Group: Group 8");
     
-    dac_initialize();
     while(TRUE)
     {
-        // still need to toggle LED1
-
-        // main loop code
-        switch(cycle_count % 3){ // just to avoid writing 3 thimes the same code
-            case 0:
-                vout = 1.0;
-                ms = 500;
-                cycle_count++;
-            break;
-            case 1:
-                vout = 2.5;
-                ms = 2000;
-                cycle_count++;
-            break;
-            default;
-                vout = 3.5;
-                ms = 1000;
-                cycle_count = 0;
-        }
-
-        dac_value = volt_to_dac_12bit_value(vout); //retrieve the register value
+        dac_set_voltage(1.0f);
+        delay_ms(500);
+        TOGGLELED(LED1_PORT);
         
-        DAC_CS_PORT = 0; // begin serial transmission;
-        for(int i = 15; i >= 0; i--){
-            // serially upload register value
-            DAC_SDI_PORT = (dac_value >> i) & 1; // take the i bit value
-            DAC_SCK_PORT = 1; // rise the clock
-            Nop();
-            DAC_SCK_PORT = 0;
-            Nop();
-        }
-        DAC_CS_PORT = 1; // end transmission
-        DAC_LDAC_PORT = 0; // transfer the register value from LDAC to DAC
-        Nop();
-        DAC_LDAC_PORT = 1;
-
-        // delay(ms); to be implemented with timers
+        dac_set_voltage(2.5f);
+        delay_ms(2000);
+        TOGGLELED(LED1_PORT);
+        
+        dac_set_voltage(3.5f);
+        delay_ms(1000);
+        TOGGLELED(LED1_PORT);
     }
 }
