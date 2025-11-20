@@ -93,6 +93,8 @@ void dac_set_voltage(float vout)
         // gain = 2
         dac_value = (uint16_t) ((1 << 12)* vout/(vref*2)) | (0 << 13);
     }
+    
+    dac_value |= (1 << 12);
 
     dac_send(dac_value);
 }
