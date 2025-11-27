@@ -13,10 +13,10 @@
 #include "dac.h"
 
 // signal parameter
-#define sine_freq 20.0f
+#define sine_freq 10.0f
 #define sample_rate 1000.0f
 #define v_min 0.0f 
-#define v_max 3.3f
+#define v_max 3.0f
 #define M_PI 3.14159265358979323846
 
 /*
@@ -39,7 +39,7 @@ void timer_initialize()
     T3CONbits.TCS = 0;
     T3CONbits.TGATE = 0;
 
-    PR3 = 1599;
+    PR3 = FCY / (8 * sample_rate) - 1;
     TMR3 = 0;
 
     IPC2bits.T3IP = 1;
@@ -86,3 +86,4 @@ void main_loop()
     
     while(TRUE) { }
 }
+
