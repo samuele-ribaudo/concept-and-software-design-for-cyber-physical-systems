@@ -35,6 +35,12 @@ void dac_initialize()
 
     // this means AN10 will become RB10, AN11->RB11, AN13->RB13
     // see datasheet 11.3
+    DAC_SDI_AD1CFG = 1;
+    DAC_SDI_AD2CFG = 1;
+    DAC_SCK_AD1CFG = 1;
+    DAC_SCK_AD2CFG = 1;
+    DAC_LDAC_AD1CFG = 1;
+    DAC_LDAC_AD2CFG = 1;
     
     // set RD8, RB10, RB11, RB13 as output pins
     DAC_CS_TRIS = 0;
@@ -94,3 +100,4 @@ void dac_convert_milli_volt(uint16_t milliVolt)
 
     dac_send(dac_value);
 }
+
