@@ -24,7 +24,6 @@
 #define MIN_Y 109
 #define MAX_Y 687
 
-
 #define PWM_MIN_US 1000
 #define PWM_MID_US 1500
 #define PWM_MAX_US 2000
@@ -36,6 +35,12 @@
 #define TOUCH_Y 1
 #define TMR1_PERIOD 1999
 #define TMR2_PERIOD 3999
+
+#define CIRCLE_RADIUS 100.0f // Radius
+#define CIRCLE_SPEED 0.05f   // Angular speed (radians per tick)
+#define CENTER_X (MIN_X + MAX_X) / 2.0f
+#define CENTER_Y (MIN_Y + MAX_Y) / 2.0f
+
 
 
 
@@ -94,6 +99,7 @@ void timer1_initialize(void){
 
 void __attribute__((__interrupt__, auto_psv)) _T1Interrupt(void){
     static int state = 0;
+    static float theta = 0;
     
     IFS0bits.T1IF = 0; // Clear Flag
 
@@ -111,6 +117,15 @@ void __attribute__((__interrupt__, auto_psv)) _T1Interrupt(void){
         cur_y_filtered = butterworth_filter_y(cur_y_raw);
         
         touch_select_dim(TOUCH_X); // Prep X
+
+        // --- Update Setpoint (Circular Trajectory) ---
+        theta += CIRCLE_SPEED;
+        if (theta > 6.283f) theta -= 6.283f; // Wrap around 2*PI
+
+        // Update Setpoints
+        setpoint_x = CENTER_X + (CIRCLE_RADIUS * cosf(theta));
+        setpoint_y = CENTER_Y + (CIRCLE_RADIUS * sinf(theta));
+
         
         // --- Run Controller ---
         pd_controller();
@@ -226,8 +241,8 @@ uint16_t touch_read(void) {
 /*
  * PD Controller
  */
-float Kp = 0.25f; 
-float Kd = 0.9f; 
+float Kp = 0.4f; 
+float Kd = 0.8f; 
 
 void pd_controller(void) {
     static float error_x_old = 0;
