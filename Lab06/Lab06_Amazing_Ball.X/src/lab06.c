@@ -226,8 +226,8 @@ uint16_t touch_read(void) {
 /*
  * PD Controller
  */
-float Kp = 0.2f; 
-float Kd = 0.5f; 
+float Kp = 0.25f; 
+float Kd = 0.9f; 
 
 void pd_controller(void) {
     static float error_x_old = 0;
