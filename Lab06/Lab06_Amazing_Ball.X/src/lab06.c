@@ -49,6 +49,13 @@
 #define TCKPS_256 0x03
 
 
+/* Function Prototypes */
+void touch_select_dim(uint8_t dim);
+uint16_t touch_read(void);
+void servo_set_duty(uint8_t servo, uint16_t duty_us);
+float butterworth_filter_x(float x_input);
+float butterworth_filter_y(float y_input);
+void pd_controller(void);
 
 /*
  * Global Variables
