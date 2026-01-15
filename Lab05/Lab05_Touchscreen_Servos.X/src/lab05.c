@@ -101,15 +101,21 @@ void touch_initialize(void) {
 void touch_select_dim(uint8_t dim) {
     if (dim == TOUCH_X) {
         CLEARBIT(PORTEbits.RE1);
+        Nop();
         SETBIT(PORTEbits.RE2);
+        Nop();
         SETBIT(PORTEbits.RE3);
+        Nop();
         
         AD1CHS0bits.CH0SA = 15; 
         
     } else {
         SETBIT(PORTEbits.RE1);
+        Nop();
         CLEARBIT(PORTEbits.RE2);
+        Nop();
         CLEARBIT(PORTEbits.RE3);
+        Nop();
         
         AD1CHS0bits.CH0SA = 9; 
     }
