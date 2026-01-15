@@ -197,13 +197,19 @@ void touch_initialize(void) {
 void touch_select_dim(uint8_t dim) {
     if (dim == TOUCH_X) {
         CLEARBIT(PORTEbits.RE1);
+        Nop();
         SETBIT(PORTEbits.RE2);
+        Nop();
         SETBIT(PORTEbits.RE3);
+        Nop();
         AD1CHS0bits.CH0SA = 15; // AN15
     } else {
         SETBIT(PORTEbits.RE1);
+        Nop();
         CLEARBIT(PORTEbits.RE2);
+        Nop();
         CLEARBIT(PORTEbits.RE3);
+        Nop();
         AD1CHS0bits.CH0SA = 9;  // AN9
     }
 }
@@ -220,8 +226,8 @@ uint16_t touch_read(void) {
 /*
  * PD Controller
  */
-float Kp = 0.04f; 
-float Kd = 0.15f; 
+float Kp = 0.4f; 
+float Kd = 0.8f; 
 
 void pd_controller(void) {
     static float error_x_old = 0;
@@ -325,8 +331,13 @@ void main_loop()
     // Start Timer (Interrupts begin)
     timer1_initialize();
     
+     lcd_locate(0,3);
+        lcd_printf("Xd: %4.0f Yd:%4.0f", setpoint_x, setpoint_y);
+    
     while(TRUE) {
         // Nothing needed here for now
+        lcd_locate(0,5);
+        lcd_printf("X: %4.0f Y:%4.0f", cur_x_filtered, cur_y_filtered);
+        __delay_ms(200);
     }
 }
-
