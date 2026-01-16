@@ -1,19 +1,15 @@
-void main_loop() {
+
+/*
+ * main loop
+ */
+    void main_loop() {
     servo_initialize();
     
-    // Parti da 1500 (centro teorico)
-    uint16_t test_x = 1500;
-    uint16_t test_y = 1500;
+    servo_set_duty(SERVO_X, 1562);
+    servo_set_duty(SERVO_Y, 1546);
     
-    // Metti i servi in questa posizione fissa
-    servo_set_duty(SERVO_X, test_x);
-    servo_set_duty(SERVO_Y, test_y);
-    
-    lcd_printf("Calibrazione...");
+    lcd_printf("Calibration...");
     
     while(TRUE) {
-        // NON fare nulla qui. Osserva la tavola.
-        // Se la pallina rotola a DESTRA -> Devi alzare o abbassare test_x?
-        // Se rotola AVANTI -> Devi toccare test_y.
     }
 }
