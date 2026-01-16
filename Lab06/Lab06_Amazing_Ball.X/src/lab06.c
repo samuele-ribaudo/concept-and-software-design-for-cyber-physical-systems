@@ -37,7 +37,7 @@
 #define TMR2_PERIOD 3999
 
 #define CIRCLE_RADIUS 0.0f // Radius
-#define CIRCLE_SPEED 0.05f   // Angular speed (radians per tick)
+#define CIRCLE_SPEED 0.01f   // Angular speed (radians per tick)
 #define CENTER_X (MIN_X + MAX_X) / 2.0f
 #define CENTER_Y (MIN_Y + MAX_Y) / 2.0f
 
@@ -346,11 +346,10 @@ void main_loop()
     // Start Timer (Interrupts begin)
     timer1_initialize();
     
-     lcd_locate(0,3);
-        lcd_printf("Xd: %4.0f Yd:%4.0f", setpoint_x, setpoint_y);
     
     while(TRUE) {
-        // Nothing needed here for now
+        lcd_locate(0,3);
+        lcd_printf("Xd: %4.0f Yd:%4.0f", setpoint_x, setpoint_y);
         lcd_locate(0,5);
         lcd_printf("X: %4.0f Y:%4.0f", cur_x_filtered, cur_y_filtered);
         __delay_ms(200);
