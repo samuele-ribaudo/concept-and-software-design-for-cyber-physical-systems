@@ -36,7 +36,7 @@
 #define TMR1_PERIOD 1999
 #define TMR2_PERIOD 3999
 
-#define CIRCLE_RADIUS 100.0f // Radius
+#define CIRCLE_RADIUS 0.0f // Radius
 #define CIRCLE_SPEED 0.05f   // Angular speed (radians per tick)
 #define CENTER_X (MIN_X + MAX_X) / 2.0f
 #define CENTER_Y (MIN_Y + MAX_Y) / 2.0f
@@ -241,8 +241,8 @@ uint16_t touch_read(void) {
 /*
  * PD Controller
  */
-float Kp = 0.4f; 
-float Kd = 0.8f; 
+float Kp = 0.9f; 
+float Kd = 0.5f; 
 
 void pd_controller(void) {
     static float error_x_old = 0;
