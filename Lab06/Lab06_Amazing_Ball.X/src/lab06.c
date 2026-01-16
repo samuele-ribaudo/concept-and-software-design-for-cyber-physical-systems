@@ -17,12 +17,12 @@
  * Parameter
  */
 // to tune before launching the program
-#define X_LEVELED_US 1582
-#define Y_LEVELED_US 1535
-#define MIN_X 77
-#define MAX_X 694
-#define MIN_Y 109
-#define MAX_Y 687
+#define X_LEVELED_US 1570
+#define Y_LEVELED_US 1554
+#define MIN_X 72
+#define MAX_X 695
+#define MIN_Y 92
+#define MAX_Y 618
 
 #define PWM_MIN_US 1000
 #define PWM_MID_US 1500
@@ -36,8 +36,8 @@
 #define TMR1_PERIOD 1999
 #define TMR2_PERIOD 3999
 
-#define CIRCLE_RADIUS 0.0f // Radius
-#define CIRCLE_SPEED 0.01f   // Angular speed (radians per tick)
+#define CIRCLE_RADIUS 50.0f // Radius
+#define CIRCLE_SPEED 0.05f   // Angular speed (radians per tick)
 #define CENTER_X (MIN_X + MAX_X) / 2.0f
 #define CENTER_Y (MIN_Y + MAX_Y) / 2.0f
 
@@ -355,3 +355,4 @@ void main_loop()
         __delay_ms(200);
     }
 }
+
