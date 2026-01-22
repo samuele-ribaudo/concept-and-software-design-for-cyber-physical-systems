@@ -36,7 +36,7 @@
 #define TMR1_PERIOD 1999
 #define TMR2_PERIOD 3999
 
-#define CIRCLE_RADIUS 120.0f // Radius
+#define CIRCLE_RADIUS 100.0f // Radius
 #define CIRCLE_SPEED 0.02f   // Angular speed (radians per tick)
 #define CENTER_X (MIN_X + MAX_X) / 2.0f
 #define CENTER_Y (MIN_Y + MAX_Y) / 2.0f
@@ -76,6 +76,9 @@ volatile float cur_y_filtered = 0;
 volatile float setpoint_x = (MIN_X + MAX_X) / 2.0f;
 volatile float setpoint_y = (MIN_Y + MAX_Y) / 2.0f;
 
+// deadline misses
+volatile int deadline_misses = 0;
+
 
 
 /*
@@ -101,6 +104,15 @@ void __attribute__((__interrupt__, auto_psv)) _T1Interrupt(void){
     static int state = 0;
     static float theta = 0;
     
+    // deadline misses
+    static int busy = 0;
+    if(busy){
+        deadline_misses++;
+        IFS0bits.T1IF = 0;
+        return;
+    }
+    
+    busy = 1; //enters critical section
     IFS0bits.T1IF = 0; // Clear Flag
 
     if (state == 0) {
@@ -132,6 +144,8 @@ void __attribute__((__interrupt__, auto_psv)) _T1Interrupt(void){
         
         state = 0;
     }
+    
+    busy = 0; // exit critical section
 }
 
 
@@ -349,7 +363,7 @@ void main_loop()
     
     while(TRUE) {
         lcd_locate(0,3);
-        lcd_printf("Xd: %4.0f Yd:%4.0f", setpoint_x, setpoint_y);
+        lcd_printf("Deadline misses: %d", deadline_misses);
         lcd_locate(0,5);
         lcd_printf("X: %4.0f Y:%4.0f", cur_x_filtered, cur_y_filtered);
         __delay_ms(200);
