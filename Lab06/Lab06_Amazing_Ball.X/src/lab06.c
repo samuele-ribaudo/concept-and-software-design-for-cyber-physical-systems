@@ -17,12 +17,12 @@
  * Parameter
  */
 // to tune before launching the program
-#define X_LEVELED_US 1547
-#define Y_LEVELED_US 1506
-#define MIN_X 68
-#define MAX_X 717
-#define MIN_Y 93
-#define MAX_Y 675
+#define X_LEVELED_US 1557
+#define Y_LEVELED_US 1510
+#define MIN_X 71
+#define MAX_X 711
+#define MIN_Y 91
+#define MAX_Y 696
 
 #define PWM_MIN_US 1000
 #define PWM_MID_US 1500
@@ -36,7 +36,7 @@
 #define TMR1_PERIOD 1999
 #define TMR2_PERIOD 3999
 
-#define CIRCLE_RADIUS 100.0f // Radius
+#define CIRCLE_RADIUS 120.0f // Radius
 #define CIRCLE_SPEED 0.02f   // Angular speed (radians per tick)
 #define CENTER_X (MIN_X + MAX_X) / 2.0f
 #define CENTER_Y (MIN_Y + MAX_Y) / 2.0f
@@ -342,7 +342,7 @@ float butterworth_filter_y(float y_input) {
 
 /*
  * main loop
- */
+*/
 void main_loop()
 {
     lcd_printf("Lab06: Amazing Ball");
@@ -369,3 +369,66 @@ void main_loop()
         __delay_ms(200);
     }
 }
+
+
+/*
+ * main loop for Calibration/Setup
+ 
+void main_loop() {
+    // 1. Initialize Hardware
+    servo_initialize();
+    touch_initialize();
+    
+    // 2. Set Servos to a fixed position (calibration center)
+    servo_set_duty(SERVO_X, 1557);
+    servo_set_duty(SERVO_Y, 1510);
+    
+    lcd_printf("Calibration Mode");
+    
+    // 3. Variables for tracking Min/Max
+    uint16_t raw_x = 0;
+    uint16_t raw_y = 0;
+    
+    // Initialize Min/Max to opposite extremes
+    uint16_t min_x = 1023, max_x = 0;
+    uint16_t min_y = 1023, max_y = 0;
+
+    // 4. Loop
+    while(TRUE) {
+        // --- READ X ---
+        touch_select_dim(TOUCH_X);
+        __delay_ms(10); // Wait for settle
+        raw_x = touch_read();
+        
+        // Update Min/Max X
+        if (raw_x < min_x && raw_x > 0) min_x = raw_x; // Ignore 0 noise
+        if (raw_x > max_x) max_x = raw_x;
+
+        // --- READ Y ---
+        touch_select_dim(TOUCH_Y);
+        __delay_ms(10); // Wait for settle
+        raw_y = touch_read();
+        
+        // Update Min/Max Y
+        if (raw_y < min_y && raw_y > 0) min_y = raw_y; // Ignore 0 noise
+        if (raw_y > max_y) max_y = raw_y;
+
+        // --- DISPLAY ---
+        // Row 1: Current Values
+        lcd_locate(0, 1);
+        lcd_printf("X:%4u Y:%4u", raw_x, raw_y);
+        
+        // Row 2: X Min/Max
+        lcd_locate(0, 2);
+        lcd_printf("Xm:%3u XM:%3u", min_x, max_x);
+
+        // Row 3: Y Min/Max
+        lcd_locate(0, 3);
+        lcd_printf("Ym:%3u YM:%3u", min_y, max_y);
+        
+        // Small delay to make screen readable
+        __delay_ms(100);
+    }
+}
+
+*/
