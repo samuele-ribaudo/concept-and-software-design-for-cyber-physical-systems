@@ -78,6 +78,8 @@ volatile float setpoint_y = (MIN_Y + MAX_Y) / 2.0f;
 
 // deadline misses
 volatile int deadline_misses = 0;
+volatile int trigger_100Hz = 0;
+volatile int current_dim = TOUCH_X;
 
 
 
@@ -101,51 +103,9 @@ void timer1_initialize(void){
 }
 
 void __attribute__((__interrupt__, auto_psv)) _T1Interrupt(void){
-    static int state = 0;
-    static float theta = 0;
-    
-    // deadline misses
-    static int busy = 0;
-    if(busy){
-        deadline_misses++;
-        IFS0bits.T1IF = 0;
-        return;
-    }
-    
-    busy = 1; //enters critical section
-    IFS0bits.T1IF = 0; // Clear Flag
-
-    if (state == 0) {
-        // --- Read X ---
-        cur_x_raw = (float)touch_read();
-        cur_x_filtered = butterworth_filter_x(cur_x_raw);
-        
-        touch_select_dim(TOUCH_Y); // Prep Y
-        state = 1; 
-    } 
-    else {
-        // --- Read Y ---
-        cur_y_raw = (float)touch_read();
-        cur_y_filtered = butterworth_filter_y(cur_y_raw);
-        
-        touch_select_dim(TOUCH_X); // Prep X
-
-        // --- Update Setpoint (Circular Trajectory) ---
-        theta += CIRCLE_SPEED;
-        if (theta > 6.283f) theta -= 6.283f; // Wrap around 2*PI
-
-        // Update Setpoints
-        setpoint_x = CENTER_X + (CIRCLE_RADIUS * cosf(theta));
-        setpoint_y = CENTER_Y + (CIRCLE_RADIUS * sinf(theta));
-
-        
-        // --- Run Controller ---
-        pd_controller();
-        
-        state = 0;
-    }
-    
-    busy = 0; // exit critical section
+    IFS0bits.T1IF = 0; // clear flag
+    if(trigger_100Hz == 1) deadline_misses++;
+    trigger_100Hz = 1; // signal main loop to run
 }
 
 
@@ -355,18 +315,56 @@ void main_loop()
     
     // Prep Touchscreen
     touch_select_dim(TOUCH_X);
-    __delay_ms(10); 
+    current_dim = TOUCH_X;
     
     // Start Timer (Interrupts begin)
     timer1_initialize();
     
+    int loop_counter = 0; // to track 50Hz and 5Hz zones
     
     while(TRUE) {
-        lcd_locate(0,3);
-        lcd_printf("Deadline misses: %d", deadline_misses);
-        lcd_locate(0,5);
-        lcd_printf("X: %4.0f Y:%4.0f", cur_x_filtered, cur_y_filtered);
-        __delay_ms(200);
+        if(trigger_100Hz){
+            trigger_100Hz = 0; // clear flag to acknowledge
+            loop_counter++;
+
+            uint16_t val = touch_read();
+
+            if(current_dim == TOUCH_X){
+                cur_x_raw = val;
+                cur_x_filtered = butterworth_filter_x(cur_x_raw);
+
+                // switch to Y for next cycle
+                touch_select_dim(TOUCH_Y);
+                current_dim = TOUCH_Y;
+            }else{
+                cur_y_raw = val;
+                cur_y_filtered = butterworth_filter_y(cur_y_raw);
+
+                // switch to X for next cycle
+                touch_select_dim(TOUCH_X);
+                current_dim = TOUCH_X;
+
+                // update circle setpoint
+                static float theta = 0;
+                theta += CIRCLE_SPEED;
+                if (theta > 6.283f) theta -= 6.283f;
+                
+                setpoint_x = CENTER_X + (CIRCLE_RADIUS * cosf(theta));
+                setpoint_y = CENTER_Y + (CIRCLE_RADIUS * sinf(theta));
+                
+                // run the PD controller
+                pd_controller();
+            }
+
+            // 5Hz code
+            if(loop_counter >= 20){
+                lcd_locate(0,3);
+                lcd_printf("Deadline misses: %d", deadline_misses);
+                lcd_locate(0,5);
+                lcd_printf("X: %4.0f Y:%4.0f", cur_x_filtered, cur_y_filtered);
+                loop_counter = 0;
+            }
+        }
     }
 }
 
