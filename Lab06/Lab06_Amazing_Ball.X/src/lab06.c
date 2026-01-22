@@ -18,7 +18,7 @@
  */
 // to tune before launching the program
 #define X_LEVELED_US 1557
-#define Y_LEVELED_US 1510
+#define Y_LEVELED_US 1525
 #define MIN_X 71
 #define MAX_X 711
 #define MIN_Y 91
@@ -36,7 +36,7 @@
 #define TMR1_PERIOD 1999
 #define TMR2_PERIOD 3999
 
-#define CIRCLE_RADIUS 120.0f // Radius
+#define CIRCLE_RADIUS 100.0f // Radius
 #define CIRCLE_SPEED 0.02f   // Angular speed (radians per tick)
 #define CENTER_X (MIN_X + MAX_X) / 2.0f
 #define CENTER_Y (MIN_Y + MAX_Y) / 2.0f
@@ -136,8 +136,8 @@ void servo_initialize(void) {
 }
 
 void servo_set_duty(uint8_t servo, uint16_t duty_us) {
-    if (duty_us < 900) duty_us = 900;
-    if (duty_us > 2100) duty_us = 2100;
+    if (duty_us < 1000) duty_us = 1000;
+    if (duty_us > 2000) duty_us = 2000;
 
     // Convert microseconds to ticks (5us per tick with 1:64 prescaler)
     uint16_t ticks = duty_us / 5;
@@ -215,8 +215,10 @@ uint16_t touch_read(void) {
 /*
  * PD Controller
  */
-float Kp = 0.8f; 
-float Kd = 10.0f; 
+float Kp_x = 0.35;                                                                                                       f; 
+float Kd_x = 7.0f; 
+float Kp_y = 0.4f; 
+float Kd_y = 8.5f; 
 
 void pd_controller(void) {
     static float error_x_old = 0;
@@ -235,7 +237,7 @@ void pd_controller(void) {
     deriv_x = error_x - error_x_old;
     
     // 3. Calculate PID Term
-    pid_out_x = (Kp * error_x) + (Kd * deriv_x);
+    pid_out_x = (Kp_x * error_x) + (Kd_x * deriv_x);
     
     // 4. Calculate Final Servo Output (Base + PID)
     out_x = X_LEVELED_US + pid_out_x;
@@ -248,7 +250,7 @@ void pd_controller(void) {
     error_y = setpoint_y - cur_y_filtered;
     deriv_y = error_y - error_y_old;
     
-    pid_out_y = (Kp * error_y) + (Kd * deriv_y);
+    pid_out_y = (Kp_y * error_y) + (Kd_y * deriv_y);
     out_y = Y_LEVELED_US + pid_out_y;
     
     error_y_old = error_y;
@@ -371,7 +373,7 @@ void main_loop()
 
 /*
  * main loop for Calibration/Setup
- 
+
 void main_loop() {
     // 1. Initialize Hardware
     servo_initialize();
@@ -379,7 +381,7 @@ void main_loop() {
     
     // 2. Set Servos to a fixed position (calibration center)
     servo_set_duty(SERVO_X, 1557);
-    servo_set_duty(SERVO_Y, 1510);
+    servo_set_duty(SERVO_Y, 1525);
     
     lcd_printf("Calibration Mode");
     
@@ -429,4 +431,5 @@ void main_loop() {
     }
 }
 
-*/
+
+ */
